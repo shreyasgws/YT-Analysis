@@ -1,0 +1,119 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --primary: #0891b2;
+  --primary-strong: #0e7490;
+  --primary-soft: #cffafe;
+  --secondary: #06b6d4;
+  --cta: #f97316;
+  --cta-strong: #ea580c;
+  --cta-soft: #ffedd5;
+
+  --bg: #f2fbfe;
+  --panel: #ffffff;
+  --panel-2: #e8f6fb;
+  --border: #c9e6f1;
+  --border-strong: #9ccfe0;
+
+  --text: #486a78;
+  --text-h: #0f5166;
+  --muted: #7899a7;
+
+  --danger: #dc2626;
+  --danger-bg: #fef2f2;
+  --danger-border: #fecaca;
+
+  --focus-ring: rgba(8, 145, 178, 0.35);
+  --shadow-sm: 0 1px 2px rgba(15, 81, 102, 0.06);
+  --shadow-md: 0 8px 24px rgba(15, 81, 102, 0.1);
+  --radius: 14px;
+
+  --summary-accent: #0891b2;
+  --summary-divider: rgba(8, 145, 178, 0.35);
+  --summary-glow: inset 0 0 20px rgba(8, 145, 178, 0.07);
+
+  --transcript-accent: #2ba07c;
+  --transcript-divider: rgba(43, 160, 124, 0.35);
+  --transcript-glow: inset 0 0 20px rgba(43, 160, 124, 0.05);
+
+  --sans: 'Plus Jakarta Sans', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, 'Cascadia Code', Consolas, monospace;
+
+  color-scheme: light dark;
+  font-family: var(--sans);
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #07141d;
+    --panel: #0e2130;
+    --panel-2: #0a1a26;
+    --border: #1b3a4a;
+    --border-strong: #2c5568;
+
+    --text: #8db3c4;
+    --text-h: #e2f2fa;
+    --muted: #5d8291;
+
+    --primary: #22d3ee;
+    --primary-strong: #67e8f9;
+    --primary-soft: rgba(34, 211, 238, 0.16);
+    --cta: #fb923c;
+    --cta-strong: #fdba74;
+    --cta-soft: rgba(249, 115, 22, 0.16);
+
+    --danger: #f87171;
+    --danger-bg: rgba(248, 113, 113, 0.1);
+    --danger-border: rgba(248, 113, 113, 0.35);
+
+    --focus-ring: rgba(34, 211, 238, 0.4);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+
+    --summary-accent: #22d3ee;
+    --summary-divider: rgba(34, 211, 238, 0.4);
+    --summary-glow: inset 0 0 24px rgba(34, 211, 238, 0.09);
+
+    --transcript-accent: #34d399;
+    --transcript-divider: rgba(52, 211, 153, 0.4);
+    --transcript-glow: inset 0 0 24px rgba(52, 211, 153, 0.06);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -307,7 +307,9 @@ export function TranscriptView({
             showTimestamps={showTimestamps}
             query={query}
             activeIndex={normalizedQuery ? activeIndex : null}
-            jumpRequest={{ index: activeIndex, nonce: scrollNonce }}
+            jumpRequest={
+              normalizedQuery || scrollNonce > 0 ? { index: activeIndex, nonce: scrollNonce } : null
+            }
             videoUrl={videoUrl}
             isLoadingLanguage={isLoadingLanguage}
             loadingLabel={selectedLanguage?.name ?? ''}

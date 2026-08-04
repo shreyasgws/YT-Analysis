@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { extractVideoId, isValidYoutubeUrl } from '../utils/youtube'
+import { LinkIcon } from './icons'
 
 interface UrlInputProps {
   onSubmit: (videoId: string) => void
@@ -30,19 +31,22 @@ export function UrlInput({ onSubmit, disabled }: UrlInputProps) {
   return (
     <form onSubmit={handleSubmit} className="url-form" noValidate>
       <div className="input-row">
-        <input
-          type="url"
-          className="url-input"
-          placeholder="Paste a YouTube URL…"
-          value={url}
-          onChange={(e) => {
-            setUrl(e.target.value)
-            if (error) setError(null)
-          }}
-          aria-label="YouTube video URL"
-          autoComplete="off"
-          spellCheck={false}
-        />
+        <div className="url-input-wrap">
+          <LinkIcon size={18} />
+          <input
+            type="url"
+            className="url-input"
+            placeholder="Paste a YouTube URL…"
+            value={url}
+            onChange={(e) => {
+              setUrl(e.target.value)
+              if (error) setError(null)
+            }}
+            aria-label="YouTube video URL"
+            autoComplete="off"
+            spellCheck={false}
+          />
+        </div>
         <button type="submit" className="submit-btn" disabled={disabled}>
           {disabled ? (
             <>

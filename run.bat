@@ -25,15 +25,9 @@ echo [3/4] Starting backend  (http://localhost:3001)...
 start "YT Backend" cmd /k "npm --prefix backend run dev"
 
 echo [4/4] Starting frontend (http://localhost:5173)...
-start "YT Frontend" cmd /k "npm --prefix frontend run dev"
+start "YT Frontend" cmd /k "npm --prefix frontend run dev -- --open"
 
 echo.
-echo Waiting for servers to come up...
-timeout /t 6 /nobreak >nul
-
-start "" "http://localhost:5173"
-
-echo.
-echo Done. The app is open in your browser.
+echo Done. The app opens in your browser as soon as Vite is ready.
 echo To stop the servers, close the two "YT Backend" / "YT Frontend" windows.
 endlocal

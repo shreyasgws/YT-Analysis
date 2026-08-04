@@ -6,16 +6,16 @@
    ============================================================ */
 :root {
   /* Surfaces */
-  --bg: #07141c;
-  --panel: #0d1b24;
-  --panel-2: #0a1720;
-  --panel-hover: #10222d;
+  --bg: #05090d;
+  --panel: #0b1118;
+  --panel-2: #090f15;
+  --panel-hover: #101a24;
 
   /* Accent (cyan) */
-  --accent: #35d6ff;
-  --accent-strong: #67e8f9;
-  --accent-soft: rgba(53, 214, 255, 0.1);
-  --accent-fill: #06131b;
+  --accent: #38c8ff;
+  --accent-strong: #6edcff;
+  --accent-soft: rgba(56, 200, 255, 0.1);
+  --accent-fill: #04111a;
 
   /* Secondary accent (orange) */
   --cta: #fb923c;
@@ -23,14 +23,15 @@
   --cta-soft: rgba(249, 115, 22, 0.14);
 
   /* Lines */
-  --border: rgba(53, 214, 255, 0.22);
-  --border-strong: rgba(53, 214, 255, 0.35);
-  --border-faint: rgba(53, 214, 255, 0.14);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --border-faint: rgba(255, 255, 255, 0.05);
+  --border-hover: rgba(56, 200, 255, 0.35);
 
   /* Text */
-  --text: #9db9c9;
-  --text-h: #e8f5fb;
-  --muted: #6b8a99;
+  --text: rgba(255, 255, 255, 0.68);
+  --text-h: #ffffff;
+  --muted: rgba(255, 255, 255, 0.45);
 
   /* Semantic */
   --danger: #f87171;
@@ -38,15 +39,15 @@
   --danger-border: rgba(248, 113, 113, 0.3);
 
   /* Focus / glow / shadow */
-  --focus-ring: rgba(53, 214, 255, 0.3);
-  --glow-accent: 0 0 25px rgba(53, 214, 255, 0.08);
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.45), 0 0 25px rgba(53, 214, 255, 0.06);
+  --focus-ring: rgba(56, 200, 255, 0.3);
+  --glow-accent: 0 0 24px rgba(56, 200, 255, 0.06);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.18), 0 20px 48px rgba(0, 0, 0, 0.28);
 
   /* Radius */
   --radius-sm: 8px;
   --radius: 12px;
-  --radius-lg: 16px;
+  --radius-lg: 18px;
 
   /* Motion */
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -65,10 +66,10 @@
   --space-16: 64px;
 
   /* Panel accents — unified on cyan */
-  --summary-accent: #35d6ff;
-  --summary-divider: rgba(53, 214, 255, 0.35);
-  --transcript-accent: #35d6ff;
-  --transcript-divider: rgba(53, 214, 255, 0.35);
+  --summary-accent: #38c8ff;
+  --summary-divider: rgba(56, 200, 255, 0.35);
+  --transcript-accent: #38c8ff;
+  --transcript-divider: rgba(56, 200, 255, 0.35);
 
   --sans: 'Plus Jakarta Sans', system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, 'Cascadia Code', Consolas, monospace;
@@ -91,11 +92,17 @@
 body {
   margin: 0;
   min-height: 100svh;
-  background: var(--bg);
+  /* Transparent so body::before (z-index -1) paints above the root's
+     base color instead of being hidden behind an opaque body background. */
+  background: transparent;
 }
 
-/* Static background depth — no animation, barely visible:
-   faint cyan glow behind the hero, a soft vignette, and film-grain noise. */
+/* Static layered background — no animation:
+   Layer 1  #05090D base (on :root)
+   Layer 2  1px grid, ~2% opacity
+   Layer 3  main blue radial glow — centered behind the hero section
+   Layer 4  secondary cyan glow — upper-right, large, extremely soft
+   Layer 5  vignette — darkens edges/corners so the hero reads as brightest */
 body::before {
   content: '';
   position: fixed;
@@ -103,10 +110,17 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E"),
-    radial-gradient(1100px 760px at 50% 42%, transparent 58%, rgba(2, 8, 12, 0.55) 100%),
-    radial-gradient(760px 420px at 50% -8%, rgba(53, 214, 255, 0.05), transparent 70%),
-    radial-gradient(900px 420px at 90% 115%, rgba(53, 214, 255, 0.04), transparent 70%);
+    radial-gradient(140% 120% at 50% 30%, transparent 52%, rgba(1, 4, 8, 0.42) 100%),
+    radial-gradient(900px 700px at 90% 6%, rgba(110, 220, 255, 0.04), transparent 72%),
+    radial-gradient(1100px 720px at 50% 22%, rgba(56, 200, 255, 0.09), transparent 72%),
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size:
+    auto,
+    auto,
+    auto,
+    72px 72px,
+    72px 72px;
 }
 
 h1,

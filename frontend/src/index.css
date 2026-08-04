@@ -137,12 +137,29 @@ p {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* Collapse large, decorative, and looping motion everywhere EXCEPT
+     .allow-motion subtrees — user-initiated micro-interactions (feature panel
+     expand/collapse, content fade, chip/button hover, focus) keep their short,
+     low-movement transitions so controls give immediate visual feedback. */
+  *:not(.allow-motion, .allow-motion *),
+  *:not(.allow-motion, .allow-motion *)::before,
+  *:not(.allow-motion, .allow-motion *)::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  /* Never loop, even inside micro-interaction subtrees. */
   *,
   *::before,
   *::after {
+    animation-iteration-count: 1 !important;
+  }
+
+  /* Page-load reveals stay disabled even inside .allow-motion subtrees. */
+  .reveal,
+  .feature-chips {
     animation-duration: 0.01ms !important;
     animation-delay: 0s !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
   }
 }

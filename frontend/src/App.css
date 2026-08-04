@@ -187,35 +187,45 @@
   display: grid;
   grid-template-rows: 0fr;
   opacity: 0;
-  /* Close: opacity fades immediately; grid/margin start 50ms later so the
-     content finishes fading out before the panel collapses. */
+  transform: translateY(8px);
+  /* contain scopes the per-frame reflow to this subtree so the collapse
+     doesn't re-layout the whole page; will-change hints a composite layer
+     for the opacity fade + glide. */
+  contain: layout;
+  will-change: opacity, transform;
+  /* Close: opacity + glide run immediately; grid/margin start 60ms later so
+     the content finishes fading out before the panel collapses. */
   transition:
-    grid-template-rows 300ms var(--ease) 50ms,
-    margin-top 300ms var(--ease) 50ms,
-    opacity 300ms var(--ease);
+    grid-template-rows 350ms var(--ease) 60ms,
+    margin-top 350ms var(--ease) 60ms,
+    opacity 350ms var(--ease),
+    transform 350ms var(--ease);
 }
 
 .feature-panel.is-open {
   grid-template-rows: 1fr;
   margin-top: var(--space-3);
   opacity: 1;
+  transform: translateY(0);
   /* Open: unfold immediately, no stagger. */
   transition:
-    grid-template-rows 300ms var(--ease),
-    margin-top 300ms var(--ease),
-    opacity 300ms var(--ease);
+    grid-template-rows 350ms var(--ease),
+    margin-top 350ms var(--ease),
+    opacity 350ms var(--ease),
+    transform 350ms var(--ease);
 }
 
 .feature-panel-inner {
   min-height: 0;
   overflow: hidden;
+  contain: layout paint;
   padding: 18px 20px;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: linear-gradient(180deg, rgba(56, 200, 255, 0.03), transparent 50%), var(--panel);
   box-shadow: var(--shadow-sm), var(--glow-accent), inset 0 1px 0 rgba(255, 255, 255, 0.04);
   visibility: hidden;
-  transition: visibility 0s 350ms;
+  transition: visibility 0s 410ms;
 }
 
 .feature-panel.is-open .feature-panel-inner {
@@ -223,23 +233,30 @@
   transition: visibility 0s;
 }
 
-/* Content swap animation: exit (140ms) → 40ms pause → enter (180ms), all on
-   var(--ease). The exit completion drives the React swap via onAnimationEnd —
-   no timers. Reduced-motion collapses durations and delays to ~0ms so content
-   switches instantly. */
+/* Content swap animation: exit (200ms) then enter (260ms), all on var(--ease).
+   The exit completion drives the React swap via onAnimationEnd — no timers.
+   Reduced-motion collapses durations and delays to ~0ms so content switches
+   instantly. */
 .feature-panel-swap {
   display: flex;
   align-items: flex-start;
   gap: 16px;
 }
 
+/* Promoted to a composited layer only while the fade/slide runs. */
+.feature-panel-swap.is-exiting,
+.feature-panel-swap.is-entering {
+  will-change: transform, opacity;
+}
+
 .feature-panel-swap.is-exiting {
-  animation: feature-fade-out 140ms var(--ease) both;
+  animation: feature-fade-out 200ms var(--ease) both;
 }
 
 .feature-panel-swap.is-entering {
-  /* 40ms pause after the exit so the swap feels intentional, not instant. */
-  animation: feature-fade-in 180ms var(--ease) 40ms both;
+  /* No extra delay — the phase machine's single frame between animationend
+     and the keyed remount is the only gap, so it reads as one fluid motion. */
+  animation: feature-fade-in 260ms var(--ease) both;
 }
 
 @keyframes feature-fade-out {

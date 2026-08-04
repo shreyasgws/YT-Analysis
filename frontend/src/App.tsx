@@ -146,7 +146,7 @@ function App() {
         </p>
       </header>
 
-      <div className="hero-actions reveal" style={{ animationDelay: '160ms' }}>
+      <div className="hero-actions reveal allow-motion" style={{ animationDelay: '160ms' }}>
         <UrlInput onSubmit={load} disabled={state === 'loading'} />
 
         {!chipsGone && (

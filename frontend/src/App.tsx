@@ -100,6 +100,8 @@ function App() {
   // loads, then drop them from layout; they remount (and fade back in) on reset.
   const [chipsGone, setChipsGone] = useState(false)
   const [activeFeature, setActiveFeature] = useState<string | null>(null)
+  // Bumped on reset so UrlInput remounts fresh (clears the URL box + error).
+  const [resetKey, setResetKey] = useState(0)
 
   useEffect(() => {
     if (state === 'success') {
@@ -127,6 +129,11 @@ function App() {
     setActiveFeature((current) => (current === id ? null : id))
   }
 
+  function handleReset() {
+    reset()
+    setResetKey((key) => key + 1)
+  }
+
   return (
     <main className="app">
       <a className="skip-link" href="#content">
@@ -147,7 +154,7 @@ function App() {
       </header>
 
       <div className="hero-actions reveal allow-motion" style={{ animationDelay: '160ms' }}>
-        <UrlInput onSubmit={load} disabled={state === 'loading'} />
+        <UrlInput key={resetKey} onSubmit={load} disabled={state === 'loading'} />
 
         {!chipsGone && (
           <div className={`feature-chips${state === 'success' ? ' is-fading' : ''}`}>
@@ -179,7 +186,7 @@ function App() {
         {state === 'error' && (
           <div className="error" role="alert">
             <p>{error}</p>
-            <button type="button" className="ghost-btn" onClick={reset}>
+            <button type="button" className="ghost-btn" onClick={handleReset}>
               Try again
             </button>
           </div>
@@ -196,7 +203,7 @@ function App() {
             selectedLang={selectedLang}
             isLoadingLanguage={isLoadingLanguage}
             onSelectLanguage={selectLanguage}
-            onReset={reset}
+            onReset={handleReset}
           />
         )}
 

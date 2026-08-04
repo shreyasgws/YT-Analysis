@@ -1,18 +1,22 @@
+import { useEffect, useState } from 'react'
 import { useTranscript } from './hooks/useTranscript'
 import { UrlInput } from './components/UrlInput'
 import { TranscriptView } from './components/TranscriptView'
 import { Skeleton } from './components/Skeleton'
-import { CheckIcon } from './components/icons'
+import { CheckIcon, YoutubeIcon } from './components/icons'
 
 const FEATURES = [
   'Local AI',
-  'No API Keys',
   'Markdown Export',
   'Timestamp Navigation',
   'Offline Friendly',
 ]
 
-const SUPPORTS = ['Tutorials', 'Podcasts', 'Lectures', 'Interviews', 'Courses']
+const QUICK_STEPS = [
+  ['Paste a YouTube URL', 'Any video link or ID works.'],
+  ['Fetch transcript', 'Auto-detected subtitles in any language.'],
+  ['Generate AI summary', 'Local study notes with timestamps in 15–40s.'],
+]
 
 function App() {
   const {
@@ -31,6 +35,18 @@ function App() {
     reset,
   } = useTranscript()
 
+  // Feature chips only matter before analysis: fade out once a transcript
+  // loads, then drop them from layout; they remount (and fade back in) on reset.
+  const [chipsGone, setChipsGone] = useState(false)
+
+  useEffect(() => {
+    if (state === 'success') {
+      const timer = setTimeout(() => setChipsGone(true), 220)
+      return () => clearTimeout(timer)
+    }
+    setChipsGone(false)
+  }, [state])
+
   return (
     <main className="app">
       <a className="skip-link" href="#content">
@@ -39,7 +55,10 @@ function App() {
 
       <header className="app-header">
         <h1 className="reveal">
-          YouTube Analysis <span className="accent">Pipeline</span>
+          <YoutubeIcon size={26} />
+          <span>
+            YouTube Analysis <span className="accent">Pipeline</span>
+          </span>
         </h1>
         <p className="tagline reveal" style={{ animationDelay: '80ms' }}>
           Analyze, summarize, and study any YouTube video — entirely on your machine.
@@ -49,20 +68,17 @@ function App() {
       <div className="hero-actions reveal" style={{ animationDelay: '160ms' }}>
         <UrlInput onSubmit={load} disabled={state === 'loading'} />
 
-        <div className="feature-chips">
-          {FEATURES.map((feature) => (
-            <span className="chip" key={feature}>
-              <CheckIcon size={12} />
-              {feature}
-            </span>
-          ))}
-        </div>
+        {!chipsGone && (
+          <div className={`feature-chips${state === 'success' ? ' is-fading' : ''}`}>
+            {FEATURES.map((feature) => (
+              <span className="chip" key={feature}>
+                <CheckIcon size={12} />
+                {feature}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
-
-      <p className="powered-by reveal" style={{ animationDelay: '240ms' }}>
-        Powered by <strong>YouTube</strong> • <strong>Ollama</strong> •{' '}
-        <strong>Qwen3.5</strong> • <strong>React</strong> • <strong>TypeScript</strong>
-      </p>
 
       <div id="content">
         {state === 'loading' && <Skeleton />}
@@ -92,24 +108,29 @@ function App() {
         )}
 
         {state === 'idle' && (
-          <div className="empty-state">
-            <div className="empty-card">
-              <h2>Supports</h2>
-              <ul className="empty-list">
-                {SUPPORTS.map((item) => (
-                  <li key={item}>
-                    <CheckIcon size={14} />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
+          <div className="quick-start reveal">
+            <ol className="quick-steps">
+              {QUICK_STEPS.map(([title, hint]) => (
+                <li key={title}>
+                  <span className="quick-step-num" aria-hidden="true">
+                    {QUICK_STEPS.findIndex(([t]) => t === title) + 1}
+                  </span>
+                  <div className="quick-step-text">
+                    <strong>{title}</strong>
+                    <span>{hint}</span>
+                  </div>
+                </li>
+              ))}
+            </ol>
           </div>
         )}
       </div>
 
-      <footer className="app-footer" aria-hidden="true">
-        Developed by <span>ShreyasGWS</span>
+      <footer className="app-footer">
+        Developed by{' '}
+        <a href="https://github.com/shreyasgws" target="_blank" rel="noopener noreferrer">
+          ShreyasGWS
+        </a>
       </footer>
     </main>
   )

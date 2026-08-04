@@ -52,6 +52,18 @@
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --dur: 200ms;
 
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
   /* Panel accents — unified on cyan */
   --summary-accent: #35d6ff;
   --summary-divider: rgba(53, 214, 255, 0.35);
@@ -82,7 +94,8 @@ body {
   background: var(--bg);
 }
 
-/* Static radial glow — no animation, barely visible */
+/* Static background depth — no animation, barely visible:
+   faint cyan glow behind the hero, a soft vignette, and film-grain noise. */
 body::before {
   content: '';
   position: fixed;
@@ -90,7 +103,9 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(700px 320px at 50% -10%, rgba(53, 214, 255, 0.07), transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E"),
+    radial-gradient(1100px 760px at 50% 42%, transparent 58%, rgba(2, 8, 12, 0.55) 100%),
+    radial-gradient(760px 420px at 50% -8%, rgba(53, 214, 255, 0.05), transparent 70%),
     radial-gradient(900px 420px at 90% 115%, rgba(53, 214, 255, 0.04), transparent 70%);
 }
 

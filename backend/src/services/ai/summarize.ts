@@ -617,6 +617,7 @@ async function runPipeline(
 
   await acquire()
 
+  let inProgressPath: string | undefined
   try {
     const base = validateAndBuildFilename(videoId, title)
     const chunks = chunkByParagraphs(preprocessed)
@@ -624,7 +625,7 @@ async function runPipeline(
 
     jobProgress.set(jobId, { done: 0, total, phase: 'chunking' })
 
-    const inProgressPath = await createInProgress(base, {
+    inProgressPath = await createInProgress(base, {
       title,
       videoId,
       lang,
@@ -696,6 +697,7 @@ async function runPipeline(
 
     await finalizeSave(inProgressPath, base)
   } catch (err) {
+    if (inProgressPath) await fs.rm(inProgressPath, { force: true })
     const current = jobProgress.get(jobId)
     const error =
       err instanceof OllamaUnavailableError

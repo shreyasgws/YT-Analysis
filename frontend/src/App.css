@@ -5,7 +5,7 @@
 .app {
   max-width: 780px;
   margin: 0 auto;
-  padding: 80px 24px 96px;
+  padding: var(--space-10) 24px 80px;
   position: relative;
 }
 
@@ -32,7 +32,7 @@
 
 .app-header {
   text-align: center;
-  margin-bottom: 44px;
+  margin-bottom: var(--space-6);
   position: relative;
 }
 
@@ -43,19 +43,30 @@
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: 620px;
-  height: 320px;
-  background: radial-gradient(closest-side, rgba(53, 214, 255, 0.08), transparent 70%);
+  width: 560px;
+  height: 260px;
+  background: radial-gradient(closest-side, rgba(53, 214, 255, 0.05), transparent 70%);
   pointer-events: none;
   z-index: -1;
 }
 
 .app-header h1 {
-  font-size: clamp(40px, 6vw, 64px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: clamp(24px, 4vw, 34px);
   font-weight: 800;
   letter-spacing: -0.03em;
-  line-height: 1.05;
+  line-height: 1.1;
   color: var(--text-h);
+}
+
+.app-header h1 svg {
+  color: var(--accent);
+  flex-shrink: 0;
+  width: 0.85em;
+  height: 0.85em;
 }
 
 .app-header h1 .accent {
@@ -63,17 +74,18 @@
 }
 
 .tagline {
-  font-size: 18px;
+  font-size: 15px;
   line-height: 1.6;
   color: var(--muted);
-  max-width: 650px;
-  margin: 18px auto 0;
+  max-width: 560px;
+  margin: 12px auto 0;
 }
 
 .hero-actions {
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-bottom: var(--space-4);
 }
 
 /* Entrance — fades up once, staggered via inline animation-delay */
@@ -98,7 +110,29 @@
   flex-wrap: wrap;
   gap: 8px;
   justify-content: center;
-  margin-top: 16px;
+  margin-top: var(--space-3);
+  animation: feature-chips-in 220ms var(--ease) backwards;
+  transition:
+    opacity 220ms var(--ease),
+    transform 220ms var(--ease);
+}
+
+/* Chips fade out once a transcript loads, then unmount (removed from layout). */
+.feature-chips.is-fading {
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+}
+
+@keyframes feature-chips-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .chip {
@@ -117,20 +151,6 @@
 
 .chip svg {
   color: var(--accent);
-}
-
-/* Powered by */
-.powered-by {
-  text-align: center;
-  font-size: 12.5px;
-  color: var(--muted);
-  opacity: 0.75;
-  margin: 20px 0 0;
-}
-
-.powered-by strong {
-  color: var(--text);
-  font-weight: 600;
 }
 
 /* ============================================================
@@ -333,9 +353,12 @@
   font-weight: 500;
 }
 
-/* Supports card — replaces the dashed placeholder box */
-.empty-state {
-  padding: 44px 24px;
+/* ============================================================
+   Quick start — empty state
+   ============================================================ */
+
+.quick-start {
+  padding: var(--space-5);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: linear-gradient(180deg, rgba(53, 214, 255, 0.03), transparent 45%), var(--panel);
@@ -343,43 +366,53 @@
   animation: reveal-up 0.45s var(--ease) both;
 }
 
-.empty-card {
-  text-align: center;
-}
-
-.empty-card h2 {
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--muted);
-  margin-bottom: 18px;
-}
-
-.empty-list {
+.quick-steps {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  gap: var(--space-4);
   justify-content: center;
+  flex-wrap: wrap;
 }
 
-.empty-list li {
+.quick-steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex: 0 1 200px;
+}
+
+.quick-step-num {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: var(--text-h);
-  background: var(--panel-2);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 8px 14px;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  border: 1px solid var(--border-strong);
+  color: var(--accent-strong);
+  font-size: 11.5px;
+  font-weight: 800;
 }
 
-.empty-list li svg {
-  color: var(--accent);
+.quick-step-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.quick-step-text strong {
+  font-size: 13.5px;
+  color: var(--text-h);
+}
+
+.quick-step-text span {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
 }
 
 /* ============================================================
@@ -1501,13 +1534,22 @@
    ============================================================ */
 
 .app-footer {
-  margin-top: 64px;
-  text-align: right;
+  margin-top: var(--space-12);
+  text-align: center;
   font-size: 11px;
-  color: var(--text);
+  color: var(--muted);
   opacity: 0.4;
-  user-select: none;
-  pointer-events: none;
+}
+
+.app-footer a {
+  color: inherit;
+  text-decoration: none;
+  transition: color var(--dur) var(--ease);
+}
+
+.app-footer a:hover {
+  color: var(--accent-strong);
+  text-decoration: underline;
 }
 
 /* ============================================================
@@ -1516,19 +1558,19 @@
 
 @media (max-width: 640px) {
   .app {
-    padding: 48px 16px 64px;
+    padding: var(--space-8) 16px 56px;
   }
 
   .app-header {
-    margin-bottom: 32px;
+    margin-bottom: 24px;
   }
 
   .app-header h1 {
-    font-size: 38px;
+    font-size: 22px;
   }
 
   .tagline {
-    font-size: 16px;
+    font-size: 14px;
   }
 
   .input-row {

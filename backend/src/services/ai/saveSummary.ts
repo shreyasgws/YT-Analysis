@@ -41,36 +41,36 @@ export interface SummaryMeta {
 
 export async function createInProgress(base: string, meta: SummaryMeta): Promise<string> {
   await ensureDir()
-  const candidates = [`${base}.inprogress.md`, `${base}_v2.inprogress.md`, `${base}_v3.inprogress.md`]
-  for (const name of candidates) {
-    const target = path.join(SUMMARIES_DIR, name)
-    try {
-      const handle = await fs.open(target, 'wx')
-      try {
-        const comment = [
-          '<!--',
-          `Video ID: ${meta.videoId}`,
-          `Title: ${meta.title}`,
-          `Language: ${meta.lang ?? 'auto'}`,
-          `Generated: ${new Date().toISOString()}`,
-          `Pipeline Version: ${meta.pipelineVersion}`,
-          `Prompt Version: ${meta.promptVersion}`,
-          `Model: ${meta.modelVersion}`,
-          '-->',
-          '',
-          '',
-        ].join('\n')
-        await handle.writeFile(`${comment}# ${meta.title}\n\n`)
-      } finally {
-        await handle.close()
-      }
-      return path.resolve(target)
-    } catch (err) {
-      const code = (err as NodeJS.ErrnoException).code
-      if (code !== 'EEXIST') throw err
+  // Only one live run per video (enforced by activeLocks in summarize.ts), so any
+  // existing inprogress file for this video is a stale leftover from a crashed or
+  // interrupted run. Remove them before creating a fresh one.
+  const names = await fs.readdir(SUMMARIES_DIR)
+  for (const name of names) {
+    if (name.startsWith(base) && name.endsWith('.inprogress.md')) {
+      await fs.rm(path.join(SUMMARIES_DIR, name), { force: true })
     }
   }
-  throw new ApiError(500, 'Too many in-progress summary files for this video.')
+  const target = path.join(SUMMARIES_DIR, `${base}.inprogress.md`)
+  const handle = await fs.open(target, 'wx')
+  try {
+    const comment = [
+      '<!--',
+      `Video ID: ${meta.videoId}`,
+      `Title: ${meta.title}`,
+      `Language: ${meta.lang ?? 'auto'}`,
+      `Generated: ${new Date().toISOString()}`,
+      `Pipeline Version: ${meta.pipelineVersion}`,
+      `Prompt Version: ${meta.promptVersion}`,
+      `Model: ${meta.modelVersion}`,
+      '-->',
+      '',
+      '',
+    ].join('\n')
+    await handle.writeFile(`${comment}# ${meta.title}\n\n`)
+  } finally {
+    await handle.close()
+  }
+  return path.resolve(target)
 }
 
 export async function finalizeSave(inProgressPath: string, base: string): Promise<string> {

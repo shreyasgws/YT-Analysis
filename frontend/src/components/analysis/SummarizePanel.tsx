@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import Markdown, { type Components } from 'react-markdown'
 import type { Paragraph } from '../../types'
 import { useSummarize } from '../../hooks/useSummarize'
@@ -94,6 +94,30 @@ export function SummarizePanel({
   const notify = useToast()
   const { state, markdown, progress, error, cached, start } = useSummarize(videoId, lang)
   const [open, setOpen] = useState(false)
+  const headerRef = useRef<HTMLDivElement>(null)
+
+  // Hold the completed progress panel (100%, all stages checked) briefly
+  // before swapping to the rendered summary — the "I'm done" beat.
+  const [showDone, setShowDone] = useState(false)
+
+  useEffect(() => {
+    if (state !== 'done') return
+    setShowDone(true)
+    const timer = setTimeout(() => setShowDone(false), 500)
+    return () => clearTimeout(timer)
+  }, [state])
+
+  // Auto-expand exactly once per completed summary and bring it into view.
+  useEffect(() => {
+    if (state !== 'done') return
+    setOpen((current) => current || true)
+    const header = headerRef.current
+    if (!header) return
+    const rect = header.getBoundingClientRect()
+    if (rect.top >= 0 && rect.bottom <= window.innerHeight) return
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    header.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'nearest' })
+  }, [state])
 
   const running = state === 'running'
   const actionLabel = state === 'done' ? 'Regenerate' : state === 'error' ? 'Try again' : 'Summarize'
@@ -150,7 +174,7 @@ export function SummarizePanel({
 
   return (
     <section className="summary-panel">
-      <div className="summary-header">
+      <div className="summary-header" ref={headerRef}>
         <PanelToggle
           open={open}
           onToggle={() => setOpen((current) => !current)}
@@ -195,7 +219,7 @@ export function SummarizePanel({
 
       {open && (
         <div className="summary-body" id="summary-body">
-          {running && progress && (
+          {(running || showDone) && progress && (
             <div className="analysis-progress" role="status" aria-live="polite">
               <div className="analysis-progress-top">
                 <span>Analyzing video</span>
@@ -242,7 +266,7 @@ export function SummarizePanel({
             </div>
           )}
 
-          {state === 'done' && markdown && (
+          {state === 'done' && markdown && !showDone && (
             <>
               {cached && <p className="summary-cached">Loaded from cache — no regeneration needed.</p>}
               <div className="summary-markdown">

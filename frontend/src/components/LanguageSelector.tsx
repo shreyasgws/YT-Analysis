@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CaptionLanguage } from '../types'
 import { captionKindLabel } from '../utils/language'
+import { useClickOutside } from '../hooks/useClickOutside'
 import { CheckIcon, ChevronDownIcon, GlobeIcon, SearchIcon } from './icons'
 
 const SEARCH_THRESHOLD = 8
@@ -26,23 +27,7 @@ export function LanguageSelector({
 
   const selected = languages.find((language) => language.code === selectedLang) ?? languages[0]
 
-  useEffect(() => {
-    if (!open) return
-    function handlePointer(event: PointerEvent) {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
-        setOpen(false)
-      }
-    }
-    function handleKey(event: KeyboardEvent) {
-      if (event.key === 'Escape') setOpen(false)
-    }
-    document.addEventListener('pointerdown', handlePointer)
-    document.addEventListener('keydown', handleKey)
-    return () => {
-      document.removeEventListener('pointerdown', handlePointer)
-      document.removeEventListener('keydown', handleKey)
-    }
-  }, [open])
+  useClickOutside(rootRef, () => setOpen(false))
 
   useEffect(() => {
     if (open && searchable) searchRef.current?.focus()

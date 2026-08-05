@@ -302,14 +302,6 @@ function reducePrompt(sections: string): ChatMessage[] {
 
 // --- Preprocessing & chunking (§10) ---
 
-export function isCJK(text: string): boolean {
-  return /[\u4E00-\u9FFF\u3040-\u30FF\uAC00-\uD7AF]/.test(text)
-}
-
-export function estimateTokens(text: string): number {
-  return text.length / (isCJK(text) ? 2 : 4)
-}
-
 function isFragment(text: string): boolean {
   const words = text.trim().split(/\s+/).filter(Boolean)
   if (words.length >= 4) return false

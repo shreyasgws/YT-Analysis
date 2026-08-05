@@ -26,24 +26,14 @@ export const exportFormats: Record<ExportFormat, ExportFormatInfo> = {
   vtt: { label: 'WebVTT (.vtt)', extension: 'vtt', mime: 'text/vtt' },
 }
 
-function toSrtTimestamp(ms: number): string {
+function toSubtitleTimestamp(ms: number, sep: string): string {
   const totalMs = Math.max(0, Math.floor(ms))
   const hours = Math.floor(totalMs / 3_600_000)
   const minutes = Math.floor((totalMs % 3_600_000) / 60_000)
   const seconds = Math.floor((totalMs % 60_000) / 1000)
   const millis = totalMs % 1000
   const pad = (n: number, w = 2) => String(n).padStart(w, '0')
-  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)},${pad(millis, 3)}`
-}
-
-function toVttTimestamp(ms: number): string {
-  const totalMs = Math.max(0, Math.floor(ms))
-  const hours = Math.floor(totalMs / 3_600_000)
-  const minutes = Math.floor((totalMs % 3_600_000) / 60_000)
-  const seconds = Math.floor((totalMs % 60_000) / 1000)
-  const millis = totalMs % 1000
-  const pad = (n: number, w = 2) => String(n).padStart(w, '0')
-  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}.${pad(millis, 3)}`
+  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}${sep}${pad(millis, 3)}`
 }
 
 const txtFormatter = (ctx: ExportContext): string =>
@@ -76,8 +66,8 @@ const jsonFormatter = (ctx: ExportContext): string =>
 const srtFormatter = (ctx: ExportContext): string =>
   ctx.segments
     .map((s, i) => {
-      const start = toSrtTimestamp(s.offset)
-      const end = toSrtTimestamp(s.offset + s.duration)
+      const start = toSubtitleTimestamp(s.offset, ',')
+      const end = toSubtitleTimestamp(s.offset + s.duration, ',')
       return `${i + 1}\n${start} --> ${end}\n${s.text}`
     })
     .join('\n\n')
@@ -87,8 +77,8 @@ const vttFormatter = (ctx: ExportContext): string =>
     'WEBVTT',
     '',
     ...ctx.segments.map((s, i) => {
-      const start = toVttTimestamp(s.offset)
-      const end = toVttTimestamp(s.offset + s.duration)
+      const start = toSubtitleTimestamp(s.offset, '.')
+      const end = toSubtitleTimestamp(s.offset + s.duration, '.')
       return `${i + 1}\n${start} --> ${end}\n${s.text}`
     }),
     '',
@@ -113,7 +103,8 @@ function sanitizeFilename(input: string): string {
 }
 
 export function buildFilename(videoId: string, title: string): string {
-  return sanitizeFilename(title) ? `${sanitizeFilename(title)}_[${videoId}]` : videoId
+  const clean = sanitizeFilename(title)
+  return clean ? `${clean}_[${videoId}]` : videoId
 }
 
 const INVALID_FILENAME_CHAR = /[<>:"/\\|?*]/

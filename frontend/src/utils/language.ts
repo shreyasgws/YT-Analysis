@@ -3,7 +3,6 @@ import type { TranscriptSource } from '../types'
 const KIND_LABELS: Record<TranscriptSource, string> = {
   manual: 'Manual',
   auto: 'Auto-generated',
-  whisper: 'Whisper',
   unknown: 'Unknown',
 }
 

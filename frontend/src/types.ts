@@ -6,19 +6,12 @@ export interface TranscriptSegment {
   duration: number
 }
 
-export type TranscriptSource = 'manual' | 'auto' | 'whisper' | 'unknown'
+export type TranscriptSource = 'manual' | 'auto' | 'unknown'
 
 export interface CaptionLanguage {
   code: string
   name: string
   kind: TranscriptSource
-}
-
-export interface Transcript {
-  videoId: string
-  lang: string | null
-  segments: TranscriptSegment[]
-  fullText: string
 }
 
 export interface VideoMeta {

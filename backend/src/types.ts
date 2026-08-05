@@ -4,7 +4,7 @@ export interface TranscriptSegment {
   duration: number
 }
 
-export type TranscriptSource = 'manual' | 'auto' | 'whisper' | 'unknown'
+export type TranscriptSource = 'manual' | 'auto' | 'unknown'
 
 export interface VideoMeta {
   videoId: string
@@ -21,11 +21,6 @@ export interface CaptionLanguage {
   kind: TranscriptSource
 }
 
-export interface LanguageListResult {
-  videoId: string
-  languages: CaptionLanguage[]
-}
-
 export interface TranscriptResult {
   videoId: string
   lang: string | null
@@ -39,6 +34,12 @@ export class ApiError extends Error {
     super(message)
     this.status = status
   }
+}
+
+export function sendError(res: import('express').Response, err: unknown): void {
+  const status = err instanceof ApiError ? err.status : 500
+  const message = err instanceof ApiError ? err.message : 'Internal server error.'
+  res.status(status).json({ error: message })
 }
 
 export interface Paragraph {

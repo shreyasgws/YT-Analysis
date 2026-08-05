@@ -1016,11 +1016,6 @@
   background: var(--cta-soft);
 }
 
-.kind-whisper {
-  color: var(--accent-strong);
-  background: var(--accent-soft);
-}
-
 .kind-unknown {
   color: var(--muted);
   background: var(--panel-2);

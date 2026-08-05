@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { ChevronDownIcon } from './icons'
+import { useClickOutside } from '../hooks/useClickOutside'
 
 export interface DropdownItem {
   label: string
@@ -16,24 +17,7 @@ interface DropdownMenuProps {
 export function DropdownMenu({ label, icon, items }: DropdownMenuProps) {
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!open) return
-    function handlePointer(event: PointerEvent) {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
-        setOpen(false)
-      }
-    }
-    function handleKey(event: KeyboardEvent) {
-      if (event.key === 'Escape') setOpen(false)
-    }
-    document.addEventListener('pointerdown', handlePointer)
-    document.addEventListener('keydown', handleKey)
-    return () => {
-      document.removeEventListener('pointerdown', handlePointer)
-      document.removeEventListener('keydown', handleKey)
-    }
-  }, [open])
+  useClickOutside(rootRef, () => setOpen(false))
 
   return (
     <div className="dropdown" ref={rootRef}>

@@ -14,11 +14,6 @@ const SOURCE_CONFIG: Record<
     tone: 'warn',
     description: 'Captions generated automatically by YouTube.',
   },
-  whisper: {
-    label: 'Whisper transcription',
-    tone: 'info',
-    description: 'Transcription produced with Whisper.',
-  },
   unknown: {
     label: 'Unknown source',
     tone: 'muted',

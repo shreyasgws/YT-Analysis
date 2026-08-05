@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { getTranscript, isValidLanguageCode, normalizeVideoId } from '../services/youtube'
-import { ApiError } from '../types'
+import { sendError } from '../types'
 
 export const transcriptRouter = Router()
 
@@ -24,8 +24,6 @@ transcriptRouter.get('/', async (req, res) => {
     const result = await getTranscript(videoId, lang)
     res.json(result)
   } catch (err) {
-    const status = err instanceof ApiError ? err.status : 500
-    const message = err instanceof ApiError ? err.message : 'Internal server error.'
-    res.status(status).json({ error: message })
+    sendError(res, err)
   }
 })

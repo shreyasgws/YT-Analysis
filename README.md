@@ -4,11 +4,7 @@ A full-featured YouTube transcript viewer with a **local, private AI summarizer*
 
 > **Current status:** Phase 1.2 — AI summarization (local Ollama) is **done and verified**. The transcript viewer (Phase 1.1) and the summarization pipeline (Phase 1.2) are complete. Later phases (summary styles, model selection, Whisper fallback, persistence) are planned — see [Roadmap](#20-roadmap).
 
-<!--
-Screenshot placeholder — add a real capture here before publishing:
-![App screenshot](https://example.com/screenshot.png)
-Alt text: YT Transcript with a video metadata card, grouped paragraphs, and an AI summary panel.
--->
+![YT Transcript — transcript view](docs/transcript-1.jpg)
 
 ---
 
@@ -1041,6 +1037,14 @@ The corresponding cache entry (`backend/cache/summaries/<hash>.json`) stores the
 
 The v1 pipeline always produces the terminal style above. Non-terminal styles are part of the roadmap.
 
+### Screenshots
+
+![App screenshot 2](docs/transcript-2.jpg)
+
+![App screenshot 3](docs/transcript-3.jpg)
+
+![App screenshot 4](docs/transcript-4.jpg)
+
 ---
 
 ## 17. Engineering Decisions
@@ -1164,9 +1168,7 @@ Planned, not yet implemented.
 
 ## 22. License
 
-<!--
-License placeholder — add the project's license text or a LICENSE file reference before publishing.
--->
+MIT License — see [LICENSE](LICENSE).
 
 
 

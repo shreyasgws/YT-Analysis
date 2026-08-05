@@ -1090,9 +1090,9 @@ The interactive checks exercised against a real YouTube video with captions:
 | 14 | Error toast, copy/download, timestamp jump, dark mode | ✅ |
 | 15 | Language-switch race (rapid switching) | ⬜ pending |
 
-### Design intent
+### Automated tests
 
-Tests are thin by design: the pipeline is exercised as end-to-end acceptance runs against real videos and the real model, which is more honest than mock-heavy unit tests for a system whose core is an LLM call. Unit-testing pure helpers (parser, sanitizer, validator) is a documented follow-up.
+`backend/test/money-path.test.ts` covers the money-path pure logic with Node's built-in test runner — the tolerant JSON parser (`extractJson`), paragraph preprocessing, chunking/overlap, output cleanup, and ID/language validation. Run with `npm test` in `backend/`. The rest of the pipeline stays honest-to-the-core by design: exercised as end-to-end acceptance runs against real videos and the real model, which beats mock-heavy unit tests for a system whose core is an LLM call.
 
 ---
 

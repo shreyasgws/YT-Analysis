@@ -182,7 +182,7 @@ function readJsonArrayOfStrings(input: string, openIdx: number): string[] | null
   return null
 }
 
-function extractJson(raw: string): JsonExtract | null {
+export function extractJson(raw: string): JsonExtract | null {
   const stripped = raw.replace(/```json\s*/gi, '').replace(/```\s*/g, '')
   const strict = tryStrictParse(stripped)
   if (strict !== null) {

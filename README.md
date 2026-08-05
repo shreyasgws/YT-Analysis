@@ -1015,11 +1015,11 @@ The v1 pipeline always produces the terminal style above. Non-terminal styles ar
 
 ### Screenshots
 
-![App screenshot 2](docs/transcript-2.jpg)
+![Analyzing a video with subtitles](docs/transcript-2.jpg)
 
-![App screenshot 3](docs/transcript-3.jpg)
+![Timestamps toggle, copy and export options](docs/transcript-3.jpg)
 
-![App screenshot 4](docs/transcript-4.jpg)
+![AI summary of an example video](docs/transcript-4.jpg)
 
 ---
 

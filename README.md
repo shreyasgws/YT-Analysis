@@ -263,14 +263,26 @@ graph LR
 
 ```mermaid
 graph TD
-    A[start run] --> B[create <base>.inprogress.md<br/>exclusive-create wx flag]
-    B --> C[write metadata comment + # title]
-    C --> D[append ## [ts] title + summary per chunk]
-    D --> E[overview + ## Key takeaways inserted after title]
-    E --> F[cleanupArtifacts pass]
-    F --> G[rename .inprogress.md → <base>.md]
-    G --> H{v2/v3 collide?}
-    H -- yes --> I[rename → <base>_v2.md, _v3.md]
+    A[Start Run]
+    B[Create .inprogress.md]
+    C[Write metadata and document title]
+    D[Append timestamped section for each chunk]
+    E[Insert overview and key takeaways]
+    F[Cleanup artifacts]
+    G[Finalize summary file]
+    H{Filename exists?}
+    I[Create versioned filename]
+
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+    E --> F
+    F --> G
+    G --> H
+    H -- No --> J[Done]
+    H -- Yes --> I
+    I --> J
 ```
 
 ---

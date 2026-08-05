@@ -40,6 +40,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   )
 }
 
+// oxlint-disable-next-line react/only-export-components
 export function useToast(): ToastContextValue['notify'] {
   const context = useContext(ToastContext)
   if (!context) {

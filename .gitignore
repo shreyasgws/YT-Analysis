@@ -8,6 +8,7 @@ dist-ssr/
 # Runtime / generated
 backend/cache/
 backend/scratch/
+backend/summaries/
 
 # Logs
 *.log

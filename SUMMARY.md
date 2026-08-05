@@ -55,7 +55,7 @@ Loading skeletons, toast feedback, clear error states with retry, keyboard-acces
 ## Why it's fast
 
 - **Virtualized rendering** — only visible rows exist in the DOM.
-- **Caching with ETag/304** — revisiting a video is instant; unchanged responses skip re-download.
+- **Browser `Cache-Control` caching** — transcript/meta/languages are cached by the browser HTTP cache; revisiting a video is instant.
 - **Content-hash summary cache** — identical inputs replay instantly, version-invalidated on pipeline/prompt/model bumps.
 - **Backend-scraped metadata** — captions enumeration, duration, and publish date are fetched once per video and reused across language switches.
 - **Global queue + per-video lock** — concurrent Ollama calls are capped (default 2) so a burst of requests can't thrash a single-user machine.

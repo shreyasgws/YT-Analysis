@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { getTranscript, isValidLanguageCode, normalizeVideoId } from '../services/youtube'
-import { sendError } from '../types'
+import { sendError } from '../errors'
 
 export const transcriptRouter = Router()
 

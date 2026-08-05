@@ -39,9 +39,12 @@ export function VirtualTranscriptBody({
     getItemKey: (index) => originalIndices[index],
   })
 
+  // oxlint-disable react-hooks/exhaustive-deps
   useEffect(() => {
+    // Scroll resets only when the paragraph list changes, not on virtualizer churn.
     virtualizer.scrollToOffset(0)
   }, [paragraphs])
+  // oxlint-enable react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (activeIndex !== null && paragraphs.length > 0) {

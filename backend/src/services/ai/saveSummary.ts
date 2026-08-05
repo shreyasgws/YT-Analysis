@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { ApiError } from '../../types'
+import { ApiError } from '../../errors'
 import { normalizeVideoId } from '../youtube'
 
 export const SUMMARIES_DIR = process.env.SUMMARIES_DIR ?? './summaries'

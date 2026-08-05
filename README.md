@@ -109,7 +109,7 @@ Summarization runs through your own [Ollama](https://ollama.com) installation. T
 ### Performance
 
 - **Virtualized rendering** — only visible rows (plus overscan) exist in the DOM, so hours-long transcripts stay instant.
-- **Two layers of caching** — a frontend in-memory cache with ETag/304 revalidation for transcripts/meta/languages, and a persistent content-hash cache for summaries.
+- **Two layers of caching** — `Cache-Control` headers let the browser cache transcripts/meta/languages, and a persistent content-hash cache covers summaries.
 - **Bounded concurrency** — a global FIFO queue gates Ollama to `MAX_CONCURRENT_JOBS` (default 2) so a burst of requests cannot saturate the CPU.
 - **Memory-bounded pipeline** — only one chunk and one section summary are held in memory at a time; the file is appended, never buffered.
 
@@ -124,7 +124,6 @@ Summarization runs through your own [Ollama](https://ollama.com) installation. T
 
 - Strict TypeScript end-to-end, `tsx` for dev, Vite for the SPA.
 - Oxlint with React rules.
-- Mock-data mode (`VITE_USE_MOCK=true`) for frontend development without the live YouTube API.
 - A single `run.bat` one-command launcher for Windows.
 
 ### UX
@@ -300,12 +299,12 @@ yt-analysis/
 │       ├── main.tsx              # React root + ToastProvider
 │       ├── App.tsx               # Top-level state machine (idle/loading/success/error)
 │       ├── api/
-│       │   ├── client.ts         # Fetch layer with in-memory TTL cache + ETag/304 revalidation
-│       │   ├── analysisClient.ts # /api/analysis client (start + poll)
-│       │   └── mockTranscript.ts # Deterministic mock data for VITE_USE_MOCK=true
+│       │   ├── client.ts         # Fetch layer (browser caches via Cache-Control headers)
+│       │   └── analysisClient.ts # /api/analysis client (start + poll)
 │       ├── hooks/
 │       │   ├── useTranscript.ts  # Race-safe transcript/language/meta state
-│       │   └── useSummarize.ts   # Poll loop, runId race-safety, localStorage resume
+│       │   ├── useSummarize.ts   # Poll loop, runId race-safety, localStorage resume
+│       │   └── useClickOutside.ts# Shared dismiss-on-outside-click/Escape handler
 │       ├── context/
 │       │   └── ToastContext.tsx  # Toast notification provider
 │       ├── components/
@@ -316,7 +315,7 @@ yt-analysis/
 │       │   ├── LanguageSelector.tsx          # Searchable caption-language picker
 │       │   ├── SearchBar.tsx                 # Search box + match navigation
 │       │   ├── HighlightText.tsx             # <mark> highlighting of matches
-│       │   ├── QualityBadge.tsx              # Manual/Auto/Whisper/Unknown badge
+│       │   ├── QualityBadge.tsx              # Manual/Auto/Unknown badge
 │       │   ├── DropdownMenu.tsx              # Accessible menu (copy/download)
 │       │   ├── UrlInput.tsx                  # URL form + validation
 │       │   ├── Skeleton.tsx                  # Loading shimmer
@@ -325,7 +324,6 @@ yt-analysis/
 │       └── utils/
 │           ├── group.ts         # Segment → paragraph grouping heuristics
 │           ├── export.ts        # TXT/MD/JSON/SRT/VTT formatters + filename sanitizers
-│           ├── cache.ts         # In-memory TTL cache store
 │           ├── youtube.ts       # ID extraction, ms formatting, word-count estimates
 │           └── language.ts      # Caption-kind labels
 ├── IMPLEMENTATION_PLAN.md       # Authoritative engineering spec + acceptance checklist
@@ -336,7 +334,7 @@ yt-analysis/
 Why it is split this way:
 
 - **`backend/` owns every external dependency** — YouTube scraping and Ollama. The SPA is a thin, fast client. This keeps the queue, the cache, and file generation in one process, and keeps the browser from ever holding long-lived work.
-- **`services/ai/` is deliberately separated from `routes/`** — HTTP concerns (validation, status codes) never leak into the pipeline, and the pipeline is independently testable (see `backend/scratch/parser-test.ts`).
+- **`services/ai/` is deliberately separated from `routes/`** — HTTP concerns (validation, status codes) never leak into the pipeline, and the pipeline stays independently testable.
 - **Frontend hooks encapsulate all async state** — `useTranscript` and `useSummarize` own request-race and polling logic so components stay declarative.
 
 ---
@@ -347,7 +345,7 @@ A complete user journey, step by step:
 
 1. **User opens the app** — the SPA renders an input, ready at `http://localhost:5173`.
 2. **User pastes a URL** — `UrlInput` validates it with `isValidYoutubeUrl` and normalizes it with `extractVideoId`.
-3. **Fetch metadata** — `useTranscript.load` calls `GET /api/video/meta` and `GET /api/video/languages` in parallel. The backend hits the YouTube oEmbed endpoint and scrapes the watch page for `captionTracks`, `lengthSeconds`, and `uploadDate`. Both are cached in the browser (24h) with ETag revalidation.
+3. **Fetch metadata** — `useTranscript.load` calls `GET /api/video/meta` and `GET /api/video/languages` in parallel. The backend hits the YouTube oEmbed endpoint and scrapes the watch page for `captionTracks`, `lengthSeconds`, and `uploadDate`. Both are cached in the browser (24h) via `Cache-Control`.
 4. **Fetch the transcript** — the backend calls `youtube-transcript` with the default language (`en` if available, else the first track) and returns millisecond-accurate segments.
 5. **Group the transcript** — the frontend runs `groupSegments`, merging fragments into readable paragraphs via sentence/time-window/gap heuristics.
 6. **Display the transcript** — `TranscriptView` renders the metadata card, stats, the Summarize panel, and a virtualized list. Search highlights matches across the whole document.
@@ -640,7 +638,7 @@ There is no global store. All async state lives in two hooks, and components rec
 
 ### Client-side caching
 
-`api/client.ts` wraps fetches in `utils/cache.ts`, an in-memory `Map` with per-resource TTLs. On a cached entry, requests send `If-None-Match`; a `304` revalidates (cache touch) without re-downloading. TTLs: transcript 15 min, metadata 24 h, languages 24 h.
+The backend sets `Cache-Control` on the transcript (15 min) and meta/languages (24 h) responses; the browser HTTP cache handles freshness and revalidation (`ETag`) natively, so no app-side cache exists.
 
 ## 9. Backend
 
@@ -792,7 +790,7 @@ Two independent layers:
 
 | Layer | Where | Key | Behavior |
 | --- | --- | --- | --- |
-| Transcript/meta/languages | Browser (in-memory) | resource + videoId(+lang) | TTL + ETag/304 revalidation |
+| Transcript/meta/languages | Browser HTTP cache | URL | `Cache-Control: max-age` (900 s / 86400 s) + ETag |
 | Summaries | Disk (`CACHE_DIR`) | SHA-256 of versions + preprocessed paragraphs | Persistent; version-invalidated |
 
 ### Queue and duplicate prevention
@@ -863,11 +861,9 @@ Additionally:
 
 > `OLLAMA_TIMEOUT_MS` is a hardcoded constant (`180_000` ms) in `ollama.ts`, not an env var.
 
-### Frontend (`.env` in `frontend/`)
+### Frontend
 
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `VITE_USE_MOCK` | (unset) | `"true"` switches all data calls to the deterministic mock client |
+No frontend environment variables are used.
 
 ### Pipeline version constants (code, not env)
 
@@ -924,15 +920,6 @@ Open **http://localhost:5173**, paste a link, press **Get transcript**.
 ```bat
 run.bat
 ```
-
-### Development with mock data
-
-```bash
-# frontend/.env
-VITE_USE_MOCK=true
-```
-
-This bypasses the live YouTube API and Ollama with deterministic sample data.
 
 ### Scripts
 
@@ -1063,7 +1050,7 @@ This section records the significant decisions and the reasoning behind them —
 | Global FIFO queue + per-video lock | Unbounded concurrency | A local model can only serve so many simultaneous calls; the lock dedupes double-clicks and repeated runs of the same video. |
 | 429 on queue overflow | Wait forever / error out | The client gets an explicit, actionable signal instead of a silent hang. |
 | Virtualized transcript (`@tanstack/react-virtual`) | Render-all rows | Constant DOM and memory cost regardless of transcript size; stable keys across search filtering. |
-| In-memory HTTP cache with ETag revalidation | LocalStorage/disk caching | Fresh-enough data, single round-trip on revalidation, no stale-storage bugs. |
+| `Cache-Control` + browser HTTP cache | App-side in-memory cache | Zero app code; the platform caches and revalidates with ETags. |
 | `localStorage` resume for active jobs | Server-side persistence | Page refresh mid-run resumes cleanly without adding a database to the stack. |
 | Strict TypeScript on both ends | Any-heavy JS | Whole-codebase confidence; `tsc --noEmit` and oxlint gate CI-worthy quality. |
 | `tsx` as the dev runtime | ts-node / ts-jest | Native ESM, no config, instant reload. |

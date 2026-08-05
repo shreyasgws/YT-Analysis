@@ -5,7 +5,7 @@ import type {
   TranscriptSegment,
   VideoMeta,
 } from '../types'
-import { ApiError } from '../types'
+import { ApiError } from '../errors'
 
 const NOISE_PATTERN = /^\W+$|^\[.*\]$/
 const WATCH_URL = (videoId: string) => `https://www.youtube.com/watch?v=${videoId}`

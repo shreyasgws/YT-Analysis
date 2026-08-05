@@ -2,7 +2,7 @@
 
 A full-featured YouTube transcript viewer with a **local, private AI summarizer**. Paste any YouTube link, get the complete caption track as a clean, searchable, exportable document in seconds — then generate timestamped, sectioned study notes with your own local Ollama model. Nothing ever leaves your machine.
 
-> **Current status:** Phase 1.2 — AI summarization (local Ollama) is **done and verified**. The transcript viewer (Phase 1.1) and the summarization pipeline (Phase 1.2) are complete. Later phases (summary styles, model selection, Whisper fallback, persistence) are planned — see [Roadmap](#20-roadmap). The authoritative engineering spec lives in [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md).
+> **Current status:** Phase 1.2 — AI summarization (local Ollama) is **done and verified**. The transcript viewer (Phase 1.1) and the summarization pipeline (Phase 1.2) are complete. Later phases (summary styles, model selection, Whisper fallback, persistence) are planned — see [Roadmap](#20-roadmap).
 
 <!--
 Screenshot placeholder — add a real capture here before publishing:
@@ -326,7 +326,6 @@ yt-analysis/
 │           ├── export.ts        # TXT/MD/JSON/SRT/VTT formatters + filename sanitizers
 │           ├── youtube.ts       # ID extraction, ms formatting, word-count estimates
 │           └── language.ts      # Caption-kind labels
-├── IMPLEMENTATION_PLAN.md       # Authoritative engineering spec + acceptance checklist
 ├── run.bat                      # One-command launcher (backend + frontend + browser)
 └── SUMMARY.md                   # Short product summary
 ```
@@ -1091,8 +1090,6 @@ The interactive checks exercised against a real YouTube video with captions:
 | 14 | Error toast, copy/download, timestamp jump, dark mode | ✅ |
 | 15 | Language-switch race (rapid switching) | ⬜ pending |
 
-The acceptance records in `IMPLEMENTATION_PLAN.md` log the artifacts produced for each covered check.
-
 ### Design intent
 
 Tests are thin by design: the pipeline is exercised as end-to-end acceptance runs against real videos and the real model, which is more honest than mock-heavy unit tests for a system whose core is an LLM call. Unit-testing pure helpers (parser, sanitizer, validator) is a documented follow-up.
@@ -1117,7 +1114,7 @@ Known constraints of the current implementation:
 
 ## 20. Roadmap
 
-Planned, not yet implemented. Scope is staged in `IMPLEMENTATION_PLAN.md`.
+Planned, not yet implemented.
 
 ### Phase 1.3 — summary styles
 

@@ -290,7 +290,7 @@ sequenceDiagram
 ### Summarization pipeline
 
 ```mermaid
-graph LR
+graph TD
     P[paragraphs] --> PRE[preprocess] --> HASH[content hash]
     HASH --> CACHE{in cache?}
     CACHE -- yes --> DONE1[done: cached markdown]

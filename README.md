@@ -2,7 +2,7 @@
 
 A full-featured YouTube transcript viewer with a **local, private AI summarizer**. Paste any YouTube link, get the complete caption track as a clean, searchable, exportable document in seconds — then generate timestamped, sectioned study notes with your own local Ollama model. Nothing ever leaves your machine.
 
-> **Current status:** Phase 1.2 — AI summarization (local Ollama) is **done and verified**. The transcript viewer (Phase 1.1) and the summarization pipeline (Phase 1.2) are complete. Later phases (summary styles, model selection, Whisper fallback, persistence) are planned — see [Roadmap](#20-roadmap).
+> **Current status:** Phase 1.2 — AI summarization (local Ollama) is **done and verified**. The transcript viewer (Phase 1.1) and the summarization pipeline (Phase 1.2) are complete. Later phases (summary styles, model selection, Whisper fallback, persistence) are planned — see [Roadmap](#19-roadmap).
 
 ![YT Transcript — transcript view](docs/transcript-1.jpg)
 
@@ -11,27 +11,26 @@ A full-featured YouTube transcript viewer with a **local, private AI summarizer*
 ## Table of Contents
 
 1. [Overview](#1-overview)
-2. [Features](#2-features)
-3. [Architecture](#3-architecture)
-4. [Project Structure](#4-project-structure)
-5. [Workflow](#5-workflow)
+2. [Installation](#2-installation)
+3. [Usage](#3-usage)
+4. [Features](#4-features)
+5. [Architecture](#5-architecture)
 6. [Summarization Pipeline](#6-summarization-pipeline)
-7. [API Documentation](#7-api-documentation)
-8. [Frontend](#8-frontend)
-9. [Backend](#9-backend)
-10. [AI Integration](#10-ai-integration)
-11. [Performance](#11-performance)
-12. [Error Handling](#12-error-handling)
-13. [Configuration](#13-configuration)
-14. [Installation](#14-installation)
-15. [Usage](#15-usage)
-16. [Example Output](#16-example-output)
-17. [Engineering Decisions](#17-engineering-decisions)
-18. [Testing](#18-testing)
-19. [Limitations](#19-limitations)
-20. [Roadmap](#20-roadmap)
-21. [Contributing](#21-contributing)
-22. [License](#22-license)
+7. [Project Structure](#7-project-structure)
+8. [API Documentation](#8-api-documentation)
+9. [Frontend](#9-frontend)
+10. [Backend](#10-backend)
+11. [AI Integration](#11-ai-integration)
+12. [Performance](#12-performance)
+13. [Error Handling](#13-error-handling)
+14. [Configuration](#14-configuration)
+15. [Example Output](#15-example-output)
+16. [Engineering Decisions](#16-engineering-decisions)
+17. [Testing](#17-testing)
+18. [Limitations](#18-limitations)
+19. [Roadmap](#19-roadmap)
+20. [Contributing](#20-contributing)
+21. [License](#21-license)
 
 ---
 
@@ -66,7 +65,106 @@ Summarization runs through your own [Ollama](https://ollama.com) installation. T
 
 ---
 
-## 2. Features
+## 2. Installation
+
+### Requirements
+
+- **Node.js 18+** (built against Node 20/22; uses native `fetch` and `AbortSignal.timeout`).
+- **Ollama** (only for AI summarization) — install from [ollama.com](https://ollama.com) and run `ollama serve`.
+- A YouTube video **with captions** for the summarization feature.
+
+### 1. Clone and install
+
+```bash
+git clone https://github.com/shreyasgws/YT-Analysis.git
+cd YT-Analysis
+
+cd backend && npm install
+cd ../frontend && npm install
+```
+
+### 2. Pull the model
+
+```bash
+ollama pull qwen3.5:4b
+```
+
+### 3. Start the backend (`:3001`)
+
+```bash
+cd backend
+npm run dev          # tsx watch — auto-reload on change
+```
+
+Sanity check: `curl http://localhost:3001/api/health` → `{"status":"ok"}`.
+
+### 4. Start the frontend (`:5173`)
+
+```bash
+cd frontend
+npm run dev
+```
+
+Open **http://localhost:5173**, paste a link, press **Get transcript**.
+
+### Windows one-command launcher
+
+`run.bat` at the repo root installs missing dependencies, starts both servers in separate windows, and opens the browser:
+
+```bat
+run.bat
+```
+
+### Scripts
+
+| Project | Command | Purpose |
+| --- | --- | --- |
+| backend | `npm run dev` | Start API with `tsx watch` |
+| backend | `npm start` | Start API once |
+| backend | `npm run typecheck` | `tsc --noEmit` |
+| backend | `npm test` | Run the money-path unit tests (`node --test`) |
+| frontend | `npm run dev` | Vite dev server |
+| frontend | `npm run build` | `tsc -b` + production build |
+| frontend | `npm run lint` | Oxlint |
+| frontend | `npm run preview` | Preview the production build |
+
+---
+
+## 3. Usage
+
+### Get a transcript
+
+1. Paste any YouTube URL (or a bare video ID) into the input and press **Get transcript**.
+2. The metadata card shows the title, channel, thumbnail, duration, and publish date; the caption-quality badge shows Manual vs Auto-generated.
+3. The transcript renders as grouped paragraphs. Use `/` to search; `Enter` / `Shift+Enter` move between matches; `Esc` clears.
+4. Use the **Show timestamps** toggle to add per-paragraph links into the video.
+5. **Copy** or **Download** via the toolbar menus (TXT, Markdown, JSON, SRT, WebVTT).
+
+### Generate a summary
+
+1. With a transcript loaded, click **Summarize** in the panel above the transcript.
+2. Watch the stage label: `Queued…` → `Chunking…` → `Summarizing n/total` → `Reducing…` → `Assembling…` → `Done`.
+3. The sectioned notes render in place. Click any `[mm:ss]` timestamp button to jump the transcript to that moment.
+4. Use **Copy** to copy the markdown, or **Download** to save `<sanitized video title>.md`.
+5. Re-run the same video+language to hit the cache (a "Loaded from cache" notice appears).
+6. Refresh the page mid-run to confirm the job resumes (stored in `localStorage`).
+
+> The generated `.md` file is also written to the backend `summaries/` directory (server-side naming `<Title>_[<videoId>]_sections.md`, versioned `_v2`, `_v3` on collision).
+
+### What happens when you paste a URL
+
+1. **Validate** — `UrlInput` validates and normalizes the URL with `extractVideoId`.
+2. **Fetch metadata** — `useTranscript.load` calls `GET /api/video/meta` and `GET /api/video/languages` in parallel (cached in the browser for 24 h).
+3. **Fetch the transcript** — the backend returns the caption track as millisecond-accurate segments.
+4. **Group** — `groupSegments` merges 2–5 s fragments into readable paragraphs.
+5. **Display** — `TranscriptView` renders a virtualized list; search highlights matches across the whole document.
+6. **Summarize** — clicking **Summarize** sends the grouped paragraphs to `POST /api/analysis/summarize`; the backend queues, chunks, and calls Ollama (see [Summarization Pipeline](#6-summarization-pipeline)).
+7. **Poll** — `useSummarize` polls `GET /api/analysis/progress/:jobId` every 1.5 s.
+8. **Render** — the finished notes render via `react-markdown`; `[mm:ss]` timestamps jump the transcript to that point.
+
+---
+
+## 4. Features
 
 ### Transcript features
 
@@ -130,7 +228,7 @@ Summarization runs through your own [Ollama](https://ollama.com) installation. T
 
 ---
 
-## 3. Architecture
+## 5. Architecture
 
 ### Overall architecture
 
@@ -185,7 +283,7 @@ sequenceDiagram
     B->>O: per-chunk /api/chat (JSON mode)
     B->>B: append sections to .inprogress.md
     B->>B: reduce → overview + takeaways
-    B->>B: rename to <title>_[id]_sections.md
+    B->>B: rename to &lt;title&gt;_[id]_sections.md
     F-->>U: render markdown, download, copy
 ```
 
@@ -217,10 +315,10 @@ graph LR
 graph TD
     A[POST summarize] --> B[preprocess paragraphs]
     B --> C[hash = SHA-256 of<br/>versions + preprocessed paragraphs]
-    C --> D{<cache>/<hash>.json exists<br/>and versions match?}
+    C --> D{"&lt;cache&gt;/&lt;hash&gt;.json exists<br/>&amp; versions match?"}
     D -- yes --> E[instant done, cached:true<br/>markdown served, no run]
     D -- no --> F[run pipeline]
-    F --> G[write <cache>/<hash>.json<br/>with current versions]
+    F --> G["write &lt;cache&gt;/&lt;hash&gt;.json<br/>with current versions"]
     G --> H[also save .md file]
 ```
 
@@ -280,92 +378,6 @@ graph TD
     H -- Yes --> I
     I --> J
 ```
-
----
-
-## 4. Project Structure
-
-```
-yt-analysis/
-├── backend/                      # Express API — owns YouTube data + AI pipeline
-│   └── src/
-│       ├── index.ts              # App bootstrap: cors, 5mb JSON, /api/health, routers, 404
-│       ├── types.ts              # Shared domain types + ApiError
-│       ├── routes/
-│       │   ├── transcript.ts     # GET /api/transcript
-│       │   ├── video.ts          # GET /api/video/meta, /api/video/languages
-│       │   └── analysis.ts       # POST /summarize, GET /progress/:jobId
-│       └── services/
-│           ├── youtube.ts        # ID/URL normalization, watch-page scraping, captions, oEmbed
-│           └── ai/
-│               ├── ollama.ts     # Native /api/chat wrapper (JSON mode, think:false, temp 0)
-│               ├── summarize.ts  # Preprocessing, chunking, prompts, two-layer JSON parser,
-│               │                 # queue/locks/jobs, content-hash cache, assembly, validation
-│               └── saveSummary.ts# Filename sanitization, .inprogress creation, versioned finalize
-├── frontend/                     # React SPA — viewer UI
-│   └── src/
-│       ├── main.tsx              # React root + ToastProvider
-│       ├── App.tsx               # Top-level state machine (idle/loading/success/error)
-│       ├── api/
-│       │   ├── client.ts         # Fetch layer (browser caches via Cache-Control headers)
-│       │   └── analysisClient.ts # /api/analysis client (start + poll)
-│       ├── hooks/
-│       │   ├── useTranscript.ts  # Race-safe transcript/language/meta state
-│       │   ├── useSummarize.ts   # Poll loop, runId race-safety, localStorage resume
-│       │   └── useClickOutside.ts# Shared dismiss-on-outside-click/Escape handler
-│       ├── context/
-│       │   └── ToastContext.tsx  # Toast notification provider
-│       ├── components/
-│       │   ├── analysis/SummarizePanel.tsx   # Summary trigger, progress, render, copy/download
-│       │   ├── TranscriptView.tsx            # Toolbar, search, stats, wiring everything together
-│       │   ├── VirtualTranscriptBody.tsx     # TanStack Virtual windowed list
-│       │   ├── VideoMetaCard.tsx             # Thumbnail, title, channel, meta chips
-│       │   ├── LanguageSelector.tsx          # Searchable caption-language picker
-│       │   ├── SearchBar.tsx                 # Search box + match navigation
-│       │   ├── HighlightText.tsx             # <mark> highlighting of matches
-│       │   ├── QualityBadge.tsx              # Manual/Auto/Unknown badge
-│       │   ├── DropdownMenu.tsx              # Accessible menu (copy/download)
-│       │   ├── UrlInput.tsx                  # URL form + validation
-│       │   ├── Skeleton.tsx                  # Loading shimmer
-│       │   ├── Toasts.tsx                    # Toast list renderer
-│       │   └── icons.tsx                     # Inline SVG icon set
-│       └── utils/
-│           ├── group.ts         # Segment → paragraph grouping heuristics
-│           ├── export.ts        # TXT/MD/JSON/SRT/VTT formatters + filename sanitizers
-│           ├── youtube.ts       # ID extraction, ms formatting, word-count estimates
-│           └── language.ts      # Caption-kind labels
-├── run.bat                      # One-command launcher (backend + frontend + browser)
-└── SUMMARY.md                   # Short product summary
-```
-
-Why it is split this way:
-
-- **`backend/` owns every external dependency** — YouTube scraping and Ollama. The SPA is a thin, fast client. This keeps the queue, the cache, and file generation in one process, and keeps the browser from ever holding long-lived work.
-- **`services/ai/` is deliberately separated from `routes/`** — HTTP concerns (validation, status codes) never leak into the pipeline, and the pipeline stays independently testable.
-- **Frontend hooks encapsulate all async state** — `useTranscript` and `useSummarize` own request-race and polling logic so components stay declarative.
-
----
-
-## 5. Workflow
-
-A complete user journey, step by step:
-
-1. **User opens the app** — the SPA renders an input, ready at `http://localhost:5173`.
-2. **User pastes a URL** — `UrlInput` validates it with `isValidYoutubeUrl` and normalizes it with `extractVideoId`.
-3. **Fetch metadata** — `useTranscript.load` calls `GET /api/video/meta` and `GET /api/video/languages` in parallel. The backend hits the YouTube oEmbed endpoint and scrapes the watch page for `captionTracks`, `lengthSeconds`, and `uploadDate`. Both are cached in the browser (24h) via `Cache-Control`.
-4. **Fetch the transcript** — the backend calls `youtube-transcript` with the default language (`en` if available, else the first track) and returns millisecond-accurate segments.
-5. **Group the transcript** — the frontend runs `groupSegments`, merging fragments into readable paragraphs via sentence/time-window/gap heuristics.
-6. **Display the transcript** — `TranscriptView` renders the metadata card, stats, the Summarize panel, and a virtualized list. Search highlights matches across the whole document.
-7. **Start summarization** — the user clicks **Summarize**. `SummarizePanel` sends the already-grouped paragraphs to `POST /api/analysis/summarize`.
-8. **Queue** — the backend preprocesses, hashes, checks the cache, deduplicates per video, and either runs immediately or enqueues behind the global FIFO gate (max 2 concurrent).
-9. **Chunking** — paragraphs are split greedily into ~8000-character chunks with a one-paragraph overlap for context continuity.
-10. **Ollama** — each chunk is sent to the local model with a strict JSON prompt (`think:false`, `format:"json"`, `temperature:0`). Output is run through the tolerant two-layer JSON parser.
-11. **Reduce** — after all chunks, one call condenses the section summaries into an overview + key takeaways.
-12. **Validation** — the assembled document is checked (section count, ordering, JSON leakage) and only warnings are logged.
-13. **Assembly & save** — the overview block is inserted, the document is cleaned, the cache entry is written, and the `.inprogress.md` file is renamed to a versioned final name.
-14. **Frontend polling** — `useSummarize` polls `/api/analysis/progress/:jobId` every 1.5 s until `phase: "done"` arrives with the markdown.
-15. **Display** — `react-markdown` renders the notes; section timestamps are clickable and jump the transcript to that point.
-16. **Download** — the user downloads `<sanitized video title>.md` (browser-side) or copies the markdown to the clipboard.
 
 ---
 
@@ -468,7 +480,70 @@ Bump any of them and all old cache entries become invalid automatically.
 
 ---
 
-## 7. API Documentation
+## 7. Project Structure
+
+```
+yt-analysis/
+├── backend/                      # Express API — owns YouTube data + AI pipeline
+│   └── src/
+│       ├── index.ts              # App bootstrap: cors, 5mb JSON, /api/health, routers, 404
+│       ├── types.ts              # Shared domain types + ApiError
+│       ├── routes/
+│       │   ├── transcript.ts     # GET /api/transcript
+│       │   ├── video.ts          # GET /api/video/meta, /api/video/languages
+│       │   └── analysis.ts       # POST /summarize, GET /progress/:jobId
+│       └── services/
+│           ├── youtube.ts        # ID/URL normalization, watch-page scraping, captions, oEmbed
+│           └── ai/
+│               ├── ollama.ts     # Native /api/chat wrapper (JSON mode, think:false, temp 0)
+│               ├── summarize.ts  # Preprocessing, chunking, prompts, two-layer JSON parser,
+│               │                 # queue/locks/jobs, content-hash cache, assembly, validation
+│               └── saveSummary.ts# Filename sanitization, .inprogress creation, versioned finalize
+├── frontend/                     # React SPA — viewer UI
+│   └── src/
+│       ├── main.tsx              # React root + ToastProvider
+│       ├── App.tsx               # Top-level state machine (idle/loading/success/error)
+│       ├── api/
+│       │   ├── client.ts         # Fetch layer (browser caches via Cache-Control headers)
+│       │   └── analysisClient.ts # /api/analysis client (start + poll)
+│       ├── hooks/
+│       │   ├── useTranscript.ts  # Race-safe transcript/language/meta state
+│       │   ├── useSummarize.ts   # Poll loop, runId race-safety, localStorage resume
+│       │   └── useClickOutside.ts# Shared dismiss-on-outside-click/Escape handler
+│       ├── context/
+│       │   └── ToastContext.tsx  # Toast notification provider
+│       ├── components/
+│       │   ├── analysis/SummarizePanel.tsx   # Summary trigger, progress, render, copy/download
+│       │   ├── TranscriptView.tsx            # Toolbar, search, stats, wiring everything together
+│       │   ├── VirtualTranscriptBody.tsx     # TanStack Virtual windowed list
+│       │   ├── VideoMetaCard.tsx             # Thumbnail, title, channel, meta chips
+│       │   ├── LanguageSelector.tsx          # Searchable caption-language picker
+│       │   ├── SearchBar.tsx                 # Search box + match navigation
+│       │   ├── HighlightText.tsx             # <mark> highlighting of matches
+│       │   ├── QualityBadge.tsx              # Manual/Auto/Unknown badge
+│       │   ├── DropdownMenu.tsx              # Accessible menu (copy/download)
+│       │   ├── UrlInput.tsx                  # URL form + validation
+│       │   ├── Skeleton.tsx                  # Loading shimmer
+│       │   ├── Toasts.tsx                    # Toast list renderer
+│       │   └── icons.tsx                     # Inline SVG icon set
+│       └── utils/
+│           ├── group.ts         # Segment → paragraph grouping heuristics
+│           ├── export.ts        # TXT/MD/JSON/SRT/VTT formatters + filename sanitizers
+│           ├── youtube.ts       # ID extraction, ms formatting, word-count estimates
+│           └── language.ts      # Caption-kind labels
+├── run.bat                      # One-command launcher (backend + frontend + browser)
+└── SUMMARY.md                   # Short product summary
+```
+
+Why it is split this way:
+
+- **`backend/` owns every external dependency** — YouTube scraping and Ollama. The SPA is a thin, fast client. This keeps the queue, the cache, and file generation in one process, and keeps the browser from ever holding long-lived work.
+- **`services/ai/` is deliberately separated from `routes/`** — HTTP concerns (validation, status codes) never leak into the pipeline, and the pipeline stays independently testable.
+- **Frontend hooks encapsulate all async state** — `useTranscript` and `useSummarize` own request-race and polling logic so components stay declarative.
+
+---
+
+## 8. API Documentation
 
 Base URL: `http://localhost:3001`. All responses are JSON. Errors use the shape `{ "error": "<message>" }`.
 
@@ -594,7 +669,7 @@ Notes:
 
 ---
 
-## 8. Frontend
+## 9. Frontend
 
 The SPA is React 19 + TypeScript + Vite, with TanStack Virtual for windowing and `react-markdown` for rendering summaries.
 
@@ -647,7 +722,7 @@ There is no global store. All async state lives in two hooks, and components rec
 
 The backend sets `Cache-Control` on the transcript (15 min) and meta/languages (24 h) responses; the browser HTTP cache handles freshness and revalidation (`ETag`) natively, so no app-side cache exists.
 
-## 9. Backend
+## 10. Backend
 
 The backend is a Node.js + Express 4 + TypeScript API (`tsx` at runtime, strict TS). It is deliberately the single owner of everything heavy.
 
@@ -714,7 +789,7 @@ stateDiagram-v2
 
 ---
 
-## 10. AI Integration
+## 11. AI Integration
 
 ### Why Ollama
 
@@ -747,7 +822,7 @@ Summarization is deterministic by design:
 
 ### Why a tolerant JSON parser
 
-`format: "json"` reduces but does not eliminate malformed output. The Step 0 gate observed raw LaTeX backslashes, unescaped quotes, literal newlines in strings, and duplicated keys. The parser is two-layer: strict balanced-brace `JSON.parse`, then a forgiving key scanner. It converts model idiosyncrasies into either valid output or a clean per-chunk failure — never a crash.
+`format: "json"` reduces but does not eliminate malformed output. The Step 0 gate observed raw LaTeX backslashes, unescaped quotes, literal newlines in strings, and duplicated keys. The two-layer parser (strict `JSON.parse`, then a forgiving key scanner) is described in detail under [The JSON problem](#6-summarization-pipeline).
 
 ### Why the prompt forbids backslashes, LaTeX, and code fences
 
@@ -762,25 +837,13 @@ Free-form Markdown and math cause most of the malformed-JSON noise. The system p
 
 Chunks of ~8000 characters leave ample room inside the 40 960-token context for the prompt, the overlap, and carry-forward while keeping each call fast enough for CPU inference.
 
-### Carry-forward and overlap
+### Degradation, not failure
 
-Two continuity mechanisms:
-
-1. **1-paragraph overlap** — the previous chunk's final paragraph is prepended as context ("do not summarize this").
-2. **Previous-section summary** — the last successful `{title, summary}` is prepended, gated by `isUsableSummary` so a degraded summary is never fed forward.
-
-### Failure recovery
-
-Every failure mode degrades locally rather than killing the run:
-
-- truncated / empty / parse / schema failure on a chunk → `## [start–end] failed to summarize` placeholder, run continues;
-- reduce failure → overview/takeaways block omitted;
-- Ollama down → whole job `phase: "error"` with an actionable message;
-- timeout (180 s hardcoded) → treated as an Ollama unavailability error.
+Every failure mode degrades locally rather than killing the run — chunk failures become `failed to summarize` placeholders, a reduce failure omits the overview block, and Ollama being down surfaces as an actionable job error. The full matrix is in [Error Handling](#13-error-handling); the carry-forward and overlap mechanics live in [Context overlap & carry-forward](#6-summarization-pipeline).
 
 ---
 
-## 11. Performance
+## 12. Performance
 
 ### Why chunking
 
@@ -822,7 +885,7 @@ Measured in the acceptance runs (CPU, `qwen3.5:4b`):
 
 ---
 
-## 12. Error Handling
+## 13. Error Handling
 
 | Failure | Detection | Behavior |
 | --- | --- | --- |
@@ -850,7 +913,7 @@ Additionally:
 
 ---
 
-## 13. Configuration
+## 14. Configuration
 
 ### Backend (`.env` in `backend/`, or environment variables)
 
@@ -878,94 +941,7 @@ No frontend environment variables are used.
 
 ---
 
-## 14. Installation
-
-### Requirements
-
-- **Node.js 18+** (built against Node 20/22; uses native `fetch` and `AbortSignal.timeout`).
-- **Ollama** (only for AI summarization) — install from [ollama.com](https://ollama.com) and run `ollama serve`.
-- A YouTube video **with captions** for the summarization feature.
-
-### 1. Clone and install
-
-```bash
-git clone <your-repo-url>
-cd <repo>
-
-cd backend && npm install
-cd ../frontend && npm install
-```
-
-### 2. Pull the model
-
-```bash
-ollama pull qwen3.5:4b
-```
-
-### 3. Start the backend (`:3001`)
-
-```bash
-cd backend
-npm run dev          # tsx watch — auto-reload on change
-```
-
-Sanity check: `curl http://localhost:3001/api/health` → `{"status":"ok"}`.
-
-### 4. Start the frontend (`:5173`)
-
-```bash
-cd frontend
-npm run dev
-```
-
-Open **http://localhost:5173**, paste a link, press **Get transcript**.
-
-### Windows one-command launcher
-
-`run.bat` at the repo root installs missing dependencies, starts both servers in separate windows, and opens the browser:
-
-```bat
-run.bat
-```
-
-### Scripts
-
-| Project | Command | Purpose |
-| --- | --- | --- |
-| backend | `npm run dev` | Start API with `tsx watch` |
-| backend | `npm start` | Start API once |
-| backend | `npm run typecheck` | `tsc --noEmit` |
-| frontend | `npm run dev` | Vite dev server |
-| frontend | `npm run build` | `tsc -b` + production build |
-| frontend | `npm run lint` | Oxlint |
-| frontend | `npm run preview` | Preview the production build |
-
----
-
-## 15. Usage
-
-### Get a transcript
-
-1. Paste any YouTube URL (or a bare video ID) into the input and press **Get transcript**.
-2. The metadata card shows the title, channel, thumbnail, duration, and publish date; the caption-quality badge shows Manual vs Auto-generated.
-3. The transcript renders as grouped paragraphs. Use `/` to search; `Enter` / `Shift+Enter` move between matches; `Esc` clears.
-4. Use the **Show timestamps** toggle to add per-paragraph links into the video.
-5. **Copy** or **Download** via the toolbar menus (TXT, Markdown, JSON, SRT, WebVTT).
-
-### Generate a summary
-
-1. With a transcript loaded, click **Summarize** in the panel above the transcript.
-2. Watch the stage label: `Queued…` → `Chunking…` → `Summarizing n/total` → `Reducing…` → `Assembling…` → `Done`.
-3. The sectioned notes render in place. Click any `[mm:ss]` timestamp button to jump the transcript to that moment.
-4. Use **Copy** to copy the markdown, or **Download** to save `<sanitized video title>.md`.
-5. Re-run the same video+language to hit the cache (a "Loaded from cache" notice appears).
-6. Refresh the page mid-run to confirm the job resumes (stored in `localStorage`).
-
-> The generated `.md` file is also written to the backend `summaries/` directory (server-side naming `<Title>_[<videoId>]_sections.md`, versioned `_v2`, `_v3` on collision).
-
----
-
-## 16. Example Output
+## 15. Example Output
 
 A real generated file (`backend/summaries/Advice_from_the_Top_1_in_Tech_[kpIy4pmP62Y]_sections.md`):
 
@@ -1047,7 +1023,7 @@ The v1 pipeline always produces the terminal style above. Non-terminal styles ar
 
 ---
 
-## 17. Engineering Decisions
+## 16. Engineering Decisions
 
 This section records the significant decisions and the reasoning behind them — the "why" that the code alone doesn't show.
 
@@ -1072,17 +1048,18 @@ This section records the significant decisions and the reasoning behind them —
 
 ---
 
-## 18. Testing
+## 17. Testing
 
 ### Automated checks
 
 ```bash
-cd backend && npm run typecheck     # tsc --noEmit
-cd frontend && npm run typecheck    # tsc --noEmit (via npm run build)
-cd frontend && npm run lint         # oxlint
+cd backend && npm run typecheck    # tsc --noEmit
+cd backend && npm test             # node --test (money-path unit tests)
+cd frontend && npm run build       # tsc -b + vite build (frontend typecheck)
+cd frontend && npm run lint        # oxlint
 ```
 
-These run clean against the current tree.
+All four run clean against the current tree (verified).
 
 ### Manual acceptance checklist
 
@@ -1112,7 +1089,7 @@ The interactive checks exercised against a real YouTube video with captions:
 
 ---
 
-## 19. Limitations
+## 18. Limitations
 
 Known constraints of the current implementation:
 
@@ -1128,7 +1105,7 @@ Known constraints of the current implementation:
 
 ---
 
-## 20. Roadmap
+## 19. Roadmap
 
 Planned, not yet implemented.
 
@@ -1158,7 +1135,7 @@ Planned, not yet implemented.
 
 ---
 
-## 21. Contributing
+## 20. Contributing
 
 1. Open an issue describing the change before starting work (feature or bug).
 2. Branch from `main`; keep changes small and reviewable.
@@ -1166,7 +1143,7 @@ Planned, not yet implemented.
 4. Test real behavior — run the manual acceptance checklist for anything touching the pipeline or the transcript view.
 5. Open a PR with a description that references the issue and lists the acceptance checks run.
 
-## 22. License
+## 21. License
 
 MIT License — see [LICENSE](LICENSE).
 
